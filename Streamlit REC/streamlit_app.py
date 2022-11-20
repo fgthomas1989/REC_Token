@@ -11,7 +11,7 @@ st.write(
     "Claiming this token will generate a Renewable Energy Certificate (REC) and will grant you it's attributes."
 )
 
-left, right = st.columns(5)
+left, right = st.columns(2)
 
 right.write("Here is what your REC will look like:")
 
@@ -29,13 +29,15 @@ fuel = form.selectbox(
     ["Wind", "Solar"],
     index=0,
 )
+project_name = form.text_input("Project Name")
 total_energy = form.slider("MWh", 1, 100, 60)
 submit = form.form_submit_button("Generate PDF")
 
 if submit:
     html = template.render(
+        renewable_facility_location=renewable_facility_location,
         fuel=fuel,
-        fuel=fuel,
+        project_name=project_name,
         total_energy=f"{total_energy}/100",
         date=date.today().strftime("%B %d, %Y"),
     )
