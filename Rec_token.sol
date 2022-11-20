@@ -1,18 +1,4 @@
-pragma solidity ^0.5.0;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.6.2;
 
-import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/token/ERC721/ERC721Full.sol";
-
-contract Certificate is ERC721Full {
-    constructor() public ERC721Full("Certificate", "CERT") {}
-
-    function awardCertificate(address student, string memory tokenURI)
-        public
-        returns (uint256)
-    {
-        uint256 newCertificateId = totalSupply();
-        _mint(student, newCertificateId);
-        _setTokenURI(newCertificateId, tokenURI);
-
-        return newCertificateId;
-    }
-}
+import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v3.4.0/contracts/presets/ERC20PresetMinterPauser.sol";
