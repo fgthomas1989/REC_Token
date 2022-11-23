@@ -6,6 +6,8 @@ from web3 import Web3
 w3 = Web3(Web3.HTTPProvider(os.getenv("WEB3_PROVIDER_URI")))
 from pathlib import Path
 import json
+from fpdf import FPDF
+import base64
 
 @st.cache(allow_output_mutation=True)
 def load_contract():
@@ -24,9 +26,12 @@ contract = load_contract()
 accounts = w3.eth.accounts
 owner = w3.eth.accounts[0]
 user = st.text_input("Hey, enter your account details!", value=owner)
-
-
 totalsupply = contract.functions.balance(w3.eth.accounts[0]).call() + contract.functions.balance(w3.eth.accounts[1]).call() + contract.functions.balance(w3.eth.accounts[2]).call() + contract.functions.balance(w3.eth.accounts[3]).call() + contract.functions.balance(w3.eth.accounts[4]).call() + contract.functions.balance(w3.eth.accounts[5]).call() + contract.functions.balance(w3.eth.accounts[6]).call() + contract.functions.balance(w3.eth.accounts[7]).call() + contract.functions.balance(w3.eth.accounts[8]).call() + contract.functions.balance(w3.eth.accounts[9]).call()
+
+@st.cache
+def create_download_link(val, filename):
+    b64 = base64.b64encode(val)
+    return f'<a href="data:application/octet-stream;base64,{b64.decode()}" download="{filename}.pdf">Download file</a>'
 
 if user == owner:
     st.write('REC Token Company Account')
@@ -50,10 +55,29 @@ else:
         st.sidebar.markdown("Check your REC Token Balance️!")
 
     def claim():
-        claim = st.number_input('Enter amount of energy used')
-        if st.button('claim'):
-            contract.functions.claim(user,int(claim)).transact({'from': user})
-        st.sidebar.markdown("Claim your REC Token usage!")
+        st.write("Fill in the form to generate your REC!")
+
+        with st.form("Certificate"):
+            claim = st.number_input('Energy Used')
+            company_name = st.text_input("Company Name")
+            location = st.text_input("Renewable Facility Location")
+            fuel = st.selectbox("Type of Energy", ["Wind", "Solar"], index=0)
+            submitted = st.form_submit_button("Submit")
+            if submitted:
+                contract.functions.claim(user, int(claim)).transact({'from': user})
+                cert = FPDF()
+                cert.add_page()
+                cert.image('background.jpg', 0, 0)
+                cert.set_font('Times', 'B', 40)
+                cert.cell(50, 30, "Renewable Energy Certificate")
+                cert.set_font('Arial', 'B', 15)
+                cert.multi_cell(100, 50,
+                                f"This is to certify that {company_name} has used {claim} MWH units of {fuel} Renewable Energy at {location}.",
+                                align="C")
+                html = create_download_link(cert.output(dest="S").encode("latin-1"), "Renewable Energy Certificate")
+                st.markdown(html, unsafe_allow_html=True)
+
+        st.sidebar.markdown("Claim your REC Token usage to get a Renewable Energy Certificate!")
 
     page_names_to_funcs = {"Purchase": buy, "Transfer": transfer, "Check Balance": checkbalance,"Claim Tokens": claim}
     selected_page = st.sidebar.selectbox("What would you like to do?", page_names_to_funcs.keys())
