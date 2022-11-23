@@ -8,11 +8,13 @@ from pathlib import Path
 import json
 from fpdf import FPDF
 import base64
+import plotly.express as px
 from dataclasses import dataclass
 from typing import Any, List
 import datetime as datetime
 import pandas as pd
 import hashlib
+
 
 @st.cache(allow_output_mutation=True)
 def load_contract():
@@ -42,18 +44,119 @@ if user == owner:
     st.write('REC Token Company Account')
     st.write('The Total Supply of the REC Token is',totalsupply)
 else:
-    def mint():
+    if user == w3.eth.accounts[1]:
+        st.write("Nirav's Account")
+    elif user == w3.eth.accounts[2]:
+        st.write("Franco's Account")
+    elif user == w3.eth.accounts[3]:
+        st.write("Vivian's Account")
+    elif user == w3.eth.accounts[4]:
+        st.write("Sebastian's Account")
+    elif user == w3.eth.accounts[5]:
+        st.write("Abhir's Account")
+    elif user == w3.eth.accounts[6]:
+        st.write("Marghub's Account")
+    elif user == w3.eth.accounts[7]:
+        st.write("Bomin's Account")
+    elif user == w3.eth.accounts[8]:
+        st.write("Aashfaque's Account")
+    elif user == w3.eth.accounts[9]:
+        st.write("Columbia University's Account")
+    def buy():
         energy = st.number_input('Enter amount of energy generated')
-        if st.button("Mint"):
+        if st.button("Purchase"):
             contract.functions.purchase(user,owner, int(energy)).transact({'from': user})
-        st.sidebar.markdown("Receive a Renewable Energy Certificate (REC) Token on the basis of your energy generation!")
+        st.sidebar.markdown("Buy a Renewable Energy Certificate (REC) Token on the basis of your energy generation!")
 
     def transfer():
-        sender = st.text_input('Enter sender account')
         recipient = st.text_input('Enter recipient account')
         value = st.number_input('Enter amount to transfer')
+
+        @dataclass
+        class Record:
+            #user: str
+            recipient: str
+            value: float
+
+        @dataclass
+        class Block:
+            record: Record
+            creator_id: int
+            prev_hash: str = "0"
+            timestamp: str = datetime.datetime.utcnow().strftime("%H:%M:%S")
+            nonce: int = 0
+
+            def hash_block(self):
+                sha = hashlib.sha256()
+
+                record = str(self.record).encode()
+                sha.update(record)
+
+                creator_id = str(self.creator_id).encode()
+                sha.update(creator_id)
+
+                timestamp = str(self.timestamp).encode()
+                sha.update(timestamp)
+
+                prev_hash = str(self.prev_hash).encode()
+                sha.update(prev_hash)
+
+                nonce = str(self.nonce).encode()
+                sha.update(nonce)
+
+                return sha.hexdigest()
+
+        @dataclass
+        class PyChain:
+            chain: List[Block]
+            difficulty: int = 4
+
+            def proof_of_work(self, block):
+                calculated_hash = block.hash_block()
+                num_of_zeros = "0" * self.difficulty
+                while not calculated_hash.startswith(num_of_zeros):
+                    block.nonce += 1
+                    calculated_hash = block.hash_block()
+                print("Wining Hash", calculated_hash)
+                return block
+
+            def add_block(self, candidate_block):
+                block = self.proof_of_work(candidate_block)
+                self.chain += [block]
+
+            def is_valid(self):
+                block_hash = self.chain[0].hash_block()
+
+                for block in self.chain[1:]:
+                    if block_hash != block.prev_hash:
+                        print("Blockchain is invalid!")
+                        return False
+
+                    block_hash = block.hash_block()
+
+                print("Blockchain is Valid")
+                return True
+
+        @st.cache(allow_output_mutation=True)
+        def setup():
+            print("Initializing Chain")
+            return PyChain([Block("Genesis", 0)])
+
+        pychain = setup()
+
         if st.button("Transfer"):
-            contract.functions.transfer(sender,recipient, int(value)).transact({'from': user, 'gas': 1000000})
+            contract.functions.transfer(user,recipient, int(value)).transact({'from': user, 'gas': 1000000})
+            prev_block = pychain.chain[-1]
+            prev_block_hash = prev_block.hash_block()
+            new_block = Block(
+                record=Record(recipient, value),
+                creator_id=23,
+                prev_hash=prev_block_hash
+            )
+            pychain.add_block(new_block)
+        st.markdown("# Rec Token Transfer History")
+        pychain_df = pd.DataFrame(pychain.chain).astype(str)
+        st.write(pychain_df)
         st.sidebar.markdown("Transfer your REC tokens!")
 
     def checkbalance():
@@ -82,126 +185,22 @@ else:
                                 align="C")
                 html = create_download_link(cert.output(dest="S").encode("latin-1"), "Renewable Energy Certificate")
                 st.markdown(html, unsafe_allow_html=True)
-
         st.sidebar.markdown("Claim your REC Token usage to get a Renewable Energy Certificate!")
 
-    page_names_to_funcs = {"Purchase": mint, "Transfer": transfer, "Check Balance": checkbalance,"Claim Tokens": claim}
+    def distribution():
+        st.write("Here's how the tokens are distributed!")
+        data = dict(
+            number=[totalsupply, contract.functions.balance(w3.eth.accounts[1]).call(), contract.functions.balance(w3.eth.accounts[2]).call(),contract.functions.balance(w3.eth.accounts[3]).call(), contract.functions.balance(w3.eth.accounts[4]).call(), contract.functions.balance(w3.eth.accounts[5]).call(), contract.functions.balance(w3.eth.accounts[6]).call(), contract.functions.balance(w3.eth.accounts[7]).call(), contract.functions.balance(w3.eth.accounts[8]).call(), contract.functions.balance(w3.eth.accounts[9]).call()],
+            user=["Total Supply", "Nirav", "Franco", "Vivian", "Sebastian", "Abhir", "Marghub", "Bomin", "Aashfaque", "Columbia University"])
+        fig = px.funnel(data, x='number', y='user',color='user')
+        st.plotly_chart(fig)
+        st.sidebar.markdown("Check the token distribution across users!")
+
+
+    page_names_to_funcs = {"Purchase": buy, "Transfer": transfer, "Check Balance": checkbalance,"Claim Tokens": claim,'Check Distribution': distribution}
     selected_page = st.sidebar.selectbox("What would you like to do?", page_names_to_funcs.keys())
     page_names_to_funcs[selected_page]()
 
-    @dataclass
-    class Record:
-        user: str
-        recipient: str
-        value: float
-
-    @dataclass
-    class Block:
-        record: Record
-        creator_id: int
-        prev_hash: str = "0"
-        timestamp: str = datetime.datetime.utcnow().strftime("%H:%M:%S")
-        nonce: int = 0
-
-        def hash_block(self):
-            sha = hashlib.sha256()
-
-            record = str(self.record).encode()
-            sha.update(record)
-
-            creator_id = str(self.creator_id).encode()
-            sha.update(creator_id)
-
-            timestamp = str(self.timestamp).encode()
-            sha.update(timestamp)
-
-            prev_hash = str(self.prev_hash).encode()
-            sha.update(prev_hash)
-
-            nonce = str(self.nonce).encode()
-            sha.update(nonce)
-
-            return sha.hexdigest()
 
 
-    @dataclass
-    class PyChain:
-        chain: List[Block]
-        difficulty: int = 4
 
-        def proof_of_work(self, block):
-
-            calculated_hash = block.hash_block()
-
-            num_of_zeros = "0" * self.difficulty
-
-            while not calculated_hash.startswith(num_of_zeros):
-
-                block.nonce += 1
-
-                calculated_hash = block.hash_block()
-
-            print("Wining Hash", calculated_hash)
-            return block
-
-        def add_block(self, candidate_block):
-            block = self.proof_of_work(candidate_block)
-            self.chain += [block]
-
-        def is_valid(self):
-            block_hash = self.chain[0].hash_block()
-
-            for block in self.chain[1:]:
-                if block_hash != block.prev_hash:
-                    print("Blockchain is invalid!")
-                    return False
-
-                block_hash = block.hash_block()
-
-            print("Blockchain is Valid")
-            return True
-
-    @st.cache(allow_output_mutation=True)
-    def setup():
-        print("Initializing Chain")
-        return PyChain([Block("Genesis", 0)])
-
-
-    st.markdown("# PyChain")
-    st.markdown("## Store a Transaction Record in the PyChain")
-
-    pychain = setup()
-
-    sender = st.text_input("sender")
-    recipient = st.text_input("receiver")
-    value = st.text_input("amount")
-
-    if st.button("Send"):
-        prev_block = pychain.chain[-1]
-        prev_block_hash = prev_block.hash_block()
-        new_block = Block(
-            record=Record(sender, recipient, value),
-            prev_hash=prev_block_hash
-        )
-
-        pychain.add_block(new_block)
-        st.balloons()
-
-
-    st.markdown("## The REC Token Ledger")
-
-    pychain_df = pd.DataFrame(pychain.chain).astype(str)
-    st.write(pychain_df)
-
-    difficulty = st.sidebar.slider("Block Difficulty", 1, 5, 2)
-    pychain.difficulty = difficulty
-
-    st.sidebar.write("# Block Inspector")
-    selected_block = st.sidebar.selectbox(
-        "Which block would you like to see?", pychain.chain
-    )
-
-    st.sidebar.write(selected_block)
-
-    if st.button("Validate Chain"):
-        st.write(pychain.is_valid())
