@@ -8,6 +8,7 @@ from pathlib import Path
 import json
 from fpdf import FPDF
 import base64
+import plotly.express as px
 
 @st.cache(allow_output_mutation=True)
 def load_contract():
@@ -37,6 +38,24 @@ if user == owner:
     st.write('REC Token Company Account')
     st.write('The Total Supply of the REC Token is',totalsupply)
 else:
+    if user == w3.eth.accounts[1]:
+        st.write("Nirav's Account")
+    elif user == w3.eth.accounts[2]:
+        st.write("Franco's Account")
+    elif user == w3.eth.accounts[3]:
+        st.write("Vivian's Account")
+    elif user == w3.eth.accounts[4]:
+        st.write("Sebastian's Account")
+    elif user == w3.eth.accounts[5]:
+        st.write("Abhir's Account")
+    elif user == w3.eth.accounts[6]:
+        st.write("Marghub's Account")
+    elif user == w3.eth.accounts[7]:
+        st.write("Bomin's Account")
+    elif user == w3.eth.accounts[8]:
+        st.write("Aashfaque's Account")
+    elif user == w3.eth.accounts[9]:
+        st.write("Columbia University's Account")
     def buy():
         energy = st.number_input('Enter amount of energy generated')
         if st.button("Purchase"):
@@ -76,10 +95,22 @@ else:
                                 align="C")
                 html = create_download_link(cert.output(dest="S").encode("latin-1"), "Renewable Energy Certificate")
                 st.markdown(html, unsafe_allow_html=True)
-
         st.sidebar.markdown("Claim your REC Token usage to get a Renewable Energy Certificate!")
 
-    page_names_to_funcs = {"Purchase": buy, "Transfer": transfer, "Check Balance": checkbalance,"Claim Tokens": claim}
+    def distribution():
+        st.write("Here's how the tokens are distributed!")
+        data = dict(
+            number=[totalsupply, contract.functions.balance(w3.eth.accounts[1]).call(), contract.functions.balance(w3.eth.accounts[2]).call(),contract.functions.balance(w3.eth.accounts[3]).call(), contract.functions.balance(w3.eth.accounts[4]).call(), contract.functions.balance(w3.eth.accounts[5]).call(), contract.functions.balance(w3.eth.accounts[6]).call(), contract.functions.balance(w3.eth.accounts[7]).call(), contract.functions.balance(w3.eth.accounts[8]).call(), contract.functions.balance(w3.eth.accounts[9]).call()],
+            user=["Total Supply", "Nirav", "Franco", "Vivian", "Sebastian", "Abhir", "Marghub", "Bomin", "Aashfaque", "Columbia University"])
+        fig = px.funnel(data, x='number', y='user',color='user')
+        st.plotly_chart(fig)
+        st.sidebar.markdown("Check the token distribution across users!")
+
+
+
+
+
+    page_names_to_funcs = {"Purchase": buy, "Transfer": transfer, "Check Balance": checkbalance,"Claim Tokens": claim,'Check Distribution': distribution}
     selected_page = st.sidebar.selectbox("What would you like to do?", page_names_to_funcs.keys())
     page_names_to_funcs[selected_page]()
 
