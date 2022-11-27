@@ -36,9 +36,13 @@ ___
 
 ### Ganache
 
+The following image our the Transactions page in Ganache. This includes details of transactions involving specific wallets.
+
 ![Ganache Transactions](Images/Ganache%20Transactions.png)
 
 ### RemixIDE
+
+The following image shows the Smart Contract that was compiled and deployed for this project.
 
 ![Smart Contract](Images/RemixIDE.png)
 
