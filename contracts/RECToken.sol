@@ -27,7 +27,6 @@ contract RECToken {
     }
 
     function mint(address recipient, uint value) public {
-    require(msg.sender == owner, "You do not have permission to mint tokens!");
     balances[recipient] = balances[recipient].add(value);
     }
 
