@@ -25,7 +25,9 @@ ___
 
 ## Usage
 
-In order to run this program, one should open the RECToken.sol file in RemixIDE https://remix.ethereum.org/ and then compile it on version 0.5.0 and deploy it.
+In order to run this program, one should install the necessary packages as listed in requriements.txt. 
+
+Then, open the RECToken.sol file in RemixIDE https://remix.ethereum.org/ and then compile it on version 0.5.0 and deploy it.
 
 Next, copy the smart contract address and paste it into a .env file which also contains the following web3 provider URI "HTTP://127.0.0.1:7545".
 
