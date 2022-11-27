@@ -151,7 +151,7 @@ else:
     def buy():
         energy = st.number_input('Enter amount of energy generated')
         if st.button("Purchase"):
-            contract.functions.purchase(user,owner, int(energy)).transact({'from': user})
+            contract.functions.mint(user, int(energy)).transact({'from': user})
             prev_block = pychain.chain[-1]
             prev_block_hash = prev_block.hash_block()
             new_block = Block(
