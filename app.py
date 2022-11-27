@@ -69,7 +69,7 @@ else:
     elif user == w3.eth.accounts[7]:
         st.write("Bomin's Account")
     elif user == w3.eth.accounts[8]:
-        st.write("Aashfaque's Account")
+        st.write("Ashfaque's Account")
     elif user == w3.eth.accounts[9]:
         st.write("Columbia University's Account")
 
@@ -249,7 +249,7 @@ else:
                     contract.functions.balance(w3.eth.accounts[7]).call(),
                     contract.functions.balance(w3.eth.accounts[8]).call(),
                     contract.functions.balance(w3.eth.accounts[9]).call()],
-            user=["Total Supply", "Nirav", "Franco", "Vivian", "Sebastian", "Abhir", "Marghub", "Bomin", "Aashfaque",
+            user=["Total Supply", "Nirav", "Franco", "Vivian", "Sebastian", "Abhir", "Marghub", "Bomin", "Ashfaque",
                   "Columbia University"])
         fig = px.funnel(data, x='number', y='user', color='user')
         st.plotly_chart(fig)
